@@ -34,6 +34,16 @@ impl PawchopCmd {
     }
 
 
+	pub fn has_mono_field(&self, key: String) -> Option<String> {
+    	if self.parameters.contains_key(&key) &&
+    		self.parameters.get(&key).clone().unwrap().len() == 1 {
+				let vect = self.parameters.get(&key).clone().unwrap();
+				return vect.get(0).cloned();
+    		}
+    		return None;
+    }
+
+
 	pub fn show_version() {
 		println!("{}", "pawchop - porechop reimagined using rust");
 		println!("{}", "----------------------------------------");
@@ -94,6 +104,9 @@ impl PawchopCmd {
 		parameters.push((String::from("help"), Some('h'), Some(String::from("help")), false, 0, String::from("print help for method"), None)); 
 		parameters.push((String::from("version"), Some('v'), Some(String::from("version")), false, 0, String::from("display version information"), None)); 
 		parameters.push((String::from("subsample"), Some('s'), Some(String::from("subsample")), true, 1, String::from("The fraction of sequences to subsample during data review"), Some(String::from("0.05")))); 
+
+		parameters.push((String::from("input"), Some('i'), Some(String::from("input")), true, 1, String::from("one or more input file(s) or directories"), None)); 
+		parameters.push((String::from("library"), Some('l'), Some(String::from("library")), false, 1, String::from("JSON format file describing kits and their adapter and barcode sequences"), None)); 
 
 		return parameters;
 	}

@@ -1,9 +1,14 @@
 mod cmdline;
+mod adapter_scan;
+mod adapter_library;
+
+//static mut _pawchop: Option<Result<cmdline::PawchopCmd, String>> = None;
+
 
 fn main() {
-    let _pawchop = cmdline::parse_cmd_line();
+    let pawchop: Result<cmdline::PawchopCmd, String> = cmdline::parse_cmd_line();
 
-    match _pawchop {
+    match pawchop {
         Ok(pc)  => run_pawchop(pc),
         Err(e) => error(e),
     };
@@ -13,6 +18,18 @@ fn main() {
 fn error(e: String) {
     println!("Error: {}\n", e);
     cmdline::PawchopCmd::show_help();
+}
+
+
+fn load_adapters(pawchop: cmdline::PawchopCmd) -> Option<adapter_library::AdapterCatalog> {
+    println!("loading adapter sequences");
+    let ext_library = pawchop.has_mono_field(String::from("library"));
+
+    if ext_library.is_some() {
+        adapter_library::load_extrinsic_library(ext_library.unwrap())
+    } else {
+        adapter_library::load_intrinsic_library()
+    }
 }
 
 fn run_pawchop(pawchop: cmdline::PawchopCmd) {
@@ -26,5 +43,17 @@ fn run_pawchop(pawchop: cmdline::PawchopCmd) {
 
     } else {
         println!("Pawchop has been parsed");
+
+        let adapters = load_adapters(pawchop);
+        if adapters.is_none() {
+            return;
+        }
+        let adapter_info = &adapters.unwrap();
+        let sanity = adapter_info.sanity_check();
+        
+        match sanity {
+            Ok(pc)  => println!("looks sane ..."),
+            Err(e) => println!("Error: {}\n", e),
+        };
     }
 }
