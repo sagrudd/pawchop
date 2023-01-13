@@ -21,7 +21,7 @@ fn error(e: String) {
 }
 
 
-fn load_adapters(pawchop: cmdline::PawchopCmd) -> Option<adapter_library::AdapterCatalog> {
+fn load_adapters(pawchop: &cmdline::PawchopCmd) -> Option<adapter_library::AdapterCatalog> {
     println!("loading adapter sequences");
     let ext_library = pawchop.has_mono_field(String::from("library"));
 
@@ -44,15 +44,27 @@ fn run_pawchop(pawchop: cmdline::PawchopCmd) {
     } else {
         println!("Pawchop has been parsed");
 
-        let adapters = load_adapters(pawchop);
+        let adapters = load_adapters(&pawchop);
         if adapters.is_none() {
             return;
         }
         let adapter_info = &adapters.unwrap();
         let sanity = adapter_info.sanity_check();
         
+        /*
         match sanity {
-            Ok(pc)  => println!("looks sane ..."),
+            Ok(_pc)  => println!("looks sane ..."),
+            Err(e) => println!("Error: {}\n", e),
+        }; */
+
+        if !sanity.is_ok() {
+            println!("Error: {}\n", sanity.err().unwrap());
+            return;
+        }
+
+        let ascan = adapter_scan::scan_for_adapter_sequences(&pawchop, &adapter_info);
+        match ascan {
+            Ok(_c)  => println!("scan OK"),
             Err(e) => println!("Error: {}\n", e),
         };
     }

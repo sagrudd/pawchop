@@ -3,35 +3,51 @@ use serde_json::Result;
 use std::collections::HashMap;
 
 
-#[derive(Deserialize, Debug)]
-struct Adapter {
+#[derive(Deserialize, Debug, Clone)]
+pub struct Adapter {
     adapter_name: String,
     adapter_code: String,
     top_strand: String,
     bottom_strand: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 struct Barcode {
     component: String,
     forward_sequence: String,
     reverse_sequence: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
-struct SequencingKit {
+#[derive(Deserialize, Debug, Clone)]
+pub struct SequencingKit {
     kit_name: String,
     kit_code: String,
     barcodes: Option<Vec<Barcode>>,
     adapters: Option<Vec<Adapter>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct AdapterCatalog {
     document_title: String,
     document_authors: String,
     date_copied: String,
     sequencing_kits: Vec<SequencingKit>,
+}
+
+impl SequencingKit {
+    pub fn info(&self) {
+        println!("code [{}] for [{}]", self.kit_code, self.kit_name);
+        let mut adapter_count = 0;
+        let mut barcode_count = 0;
+        if self.barcodes.is_some() {
+            barcode_count = self.barcodes.as_ref().unwrap().len();
+        }
+        if self.adapters.is_some() {
+            adapter_count = self.adapters.as_ref().unwrap().len();
+        }
+        println!("\tcontains {} adapters and {} barcodes", adapter_count, barcode_count);
+    }
+
 }
 
 impl AdapterCatalog {
@@ -58,7 +74,6 @@ impl AdapterCatalog {
         }
 
         for (key, value) in &kit_map {
-            println!("{} / {}", key, value);
             if value > &1 {
                 let error_message = format!("kit [{}] appears to have redundant entries - appears {} times", &key, &value);
                 if error_str.is_none() {
@@ -66,6 +81,11 @@ impl AdapterCatalog {
                 } else {
                     let message = error_str.clone().unwrap() + "\n.      " + error_message.as_str();
                     let _ = error_str.insert(message);
+                }
+            } else {
+                let kito = self.get_kit(key.to_string());
+                if kito.is_some() {
+                    kito.unwrap().info();
                 }
             }
         }
@@ -89,6 +109,21 @@ impl AdapterCatalog {
     pub fn contains_kit(&self, key: &String) -> bool {
         return self.list_kits().contains(&key);
     }
+
+    pub fn get_kit(&self, kit: String) -> Option<SequencingKit> {
+        if !self.contains_kit(&kit) {
+            return None;
+        }
+        for val in self.sequencing_kits.iter() {
+            if &val.kit_code == &kit {
+                return Some(val.clone());
+            }
+        }
+
+        return None;
+    }
+
+
 }
 
 
