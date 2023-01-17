@@ -1,7 +1,9 @@
-use bio::io::fastq::{Reader, Record, FastqRead};
+//use bio::io::fastq::{Reader, Record, FastqRead};
 use rust_htslib::bgzf;
 use crate::{cmdline, adapter_library::AdapterCatalog};
 use std::{path::Path, fs::File, io::BufReader};
+
+use fastq::{parse_path, Record};
 
 
 pub struct ObservedAdapters {
@@ -26,13 +28,10 @@ pub fn input_scan(filepath: &Path, adapterc: &AdapterCatalog, observed: &Observe
     // let mut record = Record::new();
 
     if gzipped {
-        //let file = File::open(filepath).unwrap();
+        // this is the bio:: approach with htslib decompression
+        /* 
         let r1_reader = BufReader::new(bgzf::Reader::from_path(filepath).unwrap());
         let reader = Reader::new(r1_reader);
-
-        //reader.read(&mut record).expect("reader fubar");
-        
-
 
         for record in reader.records() {
             if record.is_ok() {
@@ -40,6 +39,15 @@ pub fn input_scan(filepath: &Path, adapterc: &AdapterCatalog, observed: &Observe
             }
         }
         //let mut freader = Reader::new(reader);
+        */
+
+        // this is the fastq library approach
+        let parser = fastq::Parser::new(bgzf::Reader::from_path(filepath).unwrap());
+        parser.each(|record| {
+            println!("{}", String::from_utf8_lossy(record.head()));
+
+            true
+        }).expect("Invalid fastq file");
     }
 
 
