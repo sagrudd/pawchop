@@ -1,5 +1,7 @@
+use bio::io::fastq::{Reader, Record, FastqRead};
+use rust_htslib::bgzf;
 use crate::{cmdline, adapter_library::AdapterCatalog};
-use std::path::Path;
+use std::{path::Path, fs::File, io::BufReader};
 
 
 pub struct ObservedAdapters {
@@ -19,6 +21,41 @@ impl ObservedAdapters {
 
 pub fn input_scan(filepath: &Path, adapterc: &AdapterCatalog, observed: &ObservedAdapters) {
     println!("parsing file [{filepath:?}]");
+
+    let gzipped = true;
+    // let mut record = Record::new();
+
+    if gzipped {
+        //let file = File::open(filepath).unwrap();
+        let r1_reader = BufReader::new(bgzf::Reader::from_path(filepath).unwrap());
+        let reader = Reader::new(r1_reader);
+
+        //reader.read(&mut record).expect("reader fubar");
+        
+
+
+        for record in reader.records() {
+            if record.is_ok() {
+                println!("record {:?}", record.ok().expect("messed up FASTQ entry").id());
+            }
+        }
+        //let mut freader = Reader::new(reader);
+    }
+
+
+    /* 
+    let mut reader = Reader::from_file(filepath).expect("Unable to open");
+
+
+
+    let mut record = Record::new();
+
+    reader.read(&mut record).expect("reader fubar");
+
+    println!("record {}", record.id()) */
+    
+
+    
 }
 
 pub fn scan_directory(filepath: &Path, adapterc: &AdapterCatalog, observed: &ObservedAdapters, depth: u8) {
@@ -34,15 +71,7 @@ pub fn scan_directory(filepath: &Path, adapterc: &AdapterCatalog, observed: &Obs
                 input_scan(pp, adapterc, &observed);
             }
         }
-
-
     }
-    /* 
-    if 1 > 0 {
-        scan_directory(filepath, adapterc, observed, depth+1);
-
-    }
-    */
 }
 
 
