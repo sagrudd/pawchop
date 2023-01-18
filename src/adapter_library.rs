@@ -7,7 +7,7 @@ use std::collections::HashMap;
 pub struct Adapter {
     adapter_name: String,
     adapter_code: String,
-    top_strand: String,
+    pub top_strand: String,
     bottom_strand: Option<String>,
 }
 
@@ -23,7 +23,7 @@ pub struct SequencingKit {
     kit_name: String,
     kit_code: String,
     barcodes: Option<Vec<Barcode>>,
-    adapters: Option<Vec<Adapter>>,
+    pub adapters: Option<Vec<Adapter>>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -56,7 +56,6 @@ impl AdapterCatalog {
         println!("Adaptor catalog [{}] containing information from [{}] kits", self.document_title, self.sequencing_kits.len());
         println!("\tdated [{}] - by [{}]", self.date_copied, self.document_authors);
     }
-
 
     pub fn sanity_check(&self) -> std::result::Result<bool, String> {
         self.info();
